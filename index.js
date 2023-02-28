@@ -14,3 +14,22 @@ function start() {
     gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);      // Limpiar el buffer de color asi como el de profundidad
   }
 }
+
+function initWebGL(canvas) {
+    gl = null;
+  
+    try {
+      // Tratar de tomar el contexto estandar. Si falla, retornar al experimental.
+      gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    }
+    catch(e) {}
+  
+    // Si no tenemos ningun contexto GL, date por vencido ahora
+    if (!gl) {
+      alert("Imposible inicializar WebGL. Tu navegador puede no soportarlo.");
+      gl = null;
+    }
+  
+    return gl;
+  }
+  
