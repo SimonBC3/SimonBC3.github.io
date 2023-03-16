@@ -3,14 +3,12 @@ import { OrbitControls } from "https://unpkg.com/three@0.126.1/examples/jsm/cont
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from "https://cdn.jsdelivr.net/npm/three@0.115/examples/jsm/controls/DragControls.js";
 
-var dragControls, orbitControls, cube;
+var dragControls, orbitControls;
 var objects = [];
-var dragObjects = [];
+var dragObject = [];
 const button = document.querySelector("button");
 var raycaster = new THREE.Raycaster();
-var mouse = { x: 0, y: 0 };
 var INTERSECTED, intersects;
-const sceneMeshes = [];
 
 //Scene
 var scene = new THREE.Scene();
@@ -96,13 +94,13 @@ function render() {
 //create controls
 function createControls() {
   orbitControls = new OrbitControls(camera, renderer.domElement);
-  dragControls = new DragControls(dragObjects, camera, renderer.domElement);
+  dragControls = new DragControls(dragObject, camera, renderer.domElement);
 }
 
 window.addEventListener("mousedown", raycast, false);
 
 function raycast(event) {
-  dragObjects = [];
+  dragObject = [];
 
   let x = event.clientX;
   let y = event.clientY;
@@ -115,8 +113,7 @@ function raycast(event) {
     intersects = raycaster.intersectObjects(object.children, true);
     if (intersects.length > 0) {
       INTERSECTED = intersects[0].object;
-      console.log(INTERSECTED)
-      dragObjects.push(INTERSECTED);
+      dragObject.push(INTERSECTED);
       createControls();
     }
   })
