@@ -6,7 +6,6 @@ import { DragControls } from "https://cdn.jsdelivr.net/npm/three@0.115/examples/
 var dragControls, orbitControls;
 var objects = [];
 var dragObject = [];
-const button = document.querySelector("button");
 var raycaster = new THREE.Raycaster();
 var INTERSECTED, intersects;
 
@@ -29,12 +28,6 @@ var camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 2;
 camera.lookAt(0, 1, 0);
-
-button.addEventListener("click", (event) => {
-  var vector = new THREE.Vector3(11, 6, 4);
-  console.log(vector.equals(camera.position));
-  camera.position.set;
-});
 
 //Light
 function light() {
@@ -71,10 +64,10 @@ function createChessBoard() {
 }
 
 //gltf loader
-function loadObject(object) {
+function loadObject(object, position) {
   var loader = new GLTFLoader();
   loader.load(object, function (gltf) {
-    gltf.scene.position.set(1, 0, 0);
+    gltf.scene.position.set(position.x, position.y, position.z);
     gltf.scene.scale.set(0.8, 0.8, 0.8);
     scene.add(gltf.scene);
     objects.push(gltf.scene);
@@ -137,8 +130,8 @@ function init() {
   var boardObjects;
   light();
   boardObjects = createChessBoard();
-  loadObject("chess_timer/scene.gltf");
-  loadObject("lowpolychess/pawn/scene.gltf");
+  loadObject("chess_timer/scene.gltf", new THREE.Vector3(0,0,1));
+  loadObject("lowpolychess/pawn/scene.gltf", new THREE.Vector3(0,0.2,1));
   createControls();
 }
 
