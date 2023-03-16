@@ -3,9 +3,14 @@ import { OrbitControls } from "https://unpkg.com/three@0.126.1/examples/jsm/cont
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from "https://cdn.jsdelivr.net/npm/three@0.115/examples/jsm/controls/DragControls.js";
 
-var dragControls, orbitControls;
-var objects = []
+var dragControls, orbitControls, cube;
+var objects = [];
+var dragObjects = [];
 const button = document.querySelector("button");
+var raycaster = new THREE.Raycaster();
+var mouse = { x: 0, y: 0 };
+var INTERSECTED, intersects;
+const sceneMeshes = [];
 
 //Scene
 var scene = new THREE.Scene();
@@ -26,8 +31,6 @@ var camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 2;
 camera.lookAt(0, 1, 0);
-
-
 
 button.addEventListener("click", (event) => {
   var vector = new THREE.Vector3(11, 6, 4);
@@ -58,7 +61,6 @@ function createChessBoard() {
         var cube;
         cube = new THREE.Mesh(cubeGeo, x % 2 ? lightMaterial : darkMaterial);
       } else {
-
         cube = new THREE.Mesh(cubeGeo, x % 2 ? darkMaterial : lightMaterial);
       }
       cube.position.set(x, 0, z);
@@ -70,7 +72,7 @@ function createChessBoard() {
   return boardObjects;
 }
 
-//Load pawn
+//gltf loader
 function loadObject(object) {
   var loader = new GLTFLoader();
   loader.load(object, function (gltf) {
@@ -93,30 +95,55 @@ function render() {
 
 //create controls
 function createControls() {
-  orbitControls = new OrbitControls(camera, renderer.domElement)
-  dragControls = new DragControls(objects, camera, renderer.domElement);
+  orbitControls = new OrbitControls(camera, renderer.domElement);
+  dragControls = new DragControls(dragObjects, camera, renderer.domElement);
+}
 
-  //hold shift to move object
-window.addEventListener('keydown', function (event) {
-  console.log(event.key)
-  if(event.key == 'Shift') {
+window.addEventListener("mousedown", raycast, false);
+
+function raycast(event) {
+  dragObjects = [];
+
+  let x = event.clientX;
+  let y = event.clientY;
+  x = (x / window.innerWidth) * 2 - 1;
+  y = -(y / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+
+  objects.forEach(object => {
+    intersects = raycaster.intersectObjects(object.children, true);
+    if (intersects.length > 0) {
+      INTERSECTED = intersects[0].object;
+      console.log(INTERSECTED)
+      dragObjects.push(INTERSECTED);
+      createControls();
+    }
+  })
+}
+
+//hold shift to move object
+window.addEventListener("keydown", function (event) {
+  console.log(event.key);
+  if (event.key == "Shift") {
     orbitControls.enabled = false;
   }
-})
+});
 
-window.addEventListener('keyup', function (event) {
-  if(event.key == 'Shift') {
+window.addEventListener("keyup", function (event) {
+  if (event.key == "Shift") {
     orbitControls.enabled = true;
   }
-})
-}
+});
 
 function init() {
   var boardObjects;
   light();
   boardObjects = createChessBoard();
   loadObject("chess_timer/scene.gltf");
+  loadObject("lowpolychess/pawn/scene.gltf");
   createControls();
 }
+
 init();
 animate();
