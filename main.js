@@ -26,8 +26,9 @@ var camera = new THREE.PerspectiveCamera(
   1,
   100
 );
-camera.position.z = 2;
-camera.lookAt(0, 1, 0);
+camera.position.z = 10;
+camera.position.y = 10;
+camera.position.x = 10;
 
 //Light
 function light() {
@@ -66,9 +67,13 @@ function createChessBoard() {
 //gltf loader
 function loadObject(object, position) {
   var loader = new GLTFLoader();
+  let darkMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
   loader.load(object, function (gltf) {
     gltf.scene.position.set(position.x, position.y, position.z);
     gltf.scene.scale.set(0.8, 0.8, 0.8);
+    gltf.scene.traverse((o) => {
+      if (o.isMesh) o.material = darkMaterial
+    })
     scene.add(gltf.scene);
     objects.push(gltf.scene);
   });
@@ -102,14 +107,14 @@ function raycast(event) {
 
   raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
 
-  objects.forEach(object => {
+  objects.forEach((object) => {
     intersects = raycaster.intersectObjects(object.children, true);
     if (intersects.length > 0) {
       INTERSECTED = intersects[0].object;
       dragObject.push(INTERSECTED);
       createControls();
     }
-  })
+  });
 }
 
 //hold shift to move object
@@ -130,8 +135,14 @@ function init() {
   var boardObjects;
   light();
   boardObjects = createChessBoard();
-  loadObject("chess_timer/scene.gltf", new THREE.Vector3(0,0,1));
-  loadObject("lowpolychess/pawn/scene.gltf", new THREE.Vector3(0,0.2,1));
+  loadObject("chess_timer/scene.gltf", new THREE.Vector3(0, 0, 1));
+  loadObject("lowpolychess/pawn/scene.gltf", new THREE.Vector3(1, 0.2, 1));
+  for (let column = 0; column < 8; column++) {
+    loadObject(
+      "lowpolychess/pawn/scene.gltf",
+      new THREE.Vector3(column, 0.2, 1)
+    );
+  }
   createControls();
 }
 
