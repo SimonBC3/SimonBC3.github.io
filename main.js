@@ -81,7 +81,7 @@ function createChessBoard() {
 }
 
 //gltf loader
-function loadObject(object, position, material) {
+function loadPiece(object, position, material) {
   var loader = new GLTFLoader();
   loader.load(object, function (gltf) {
     gltf.scene.position.set(position.x, position.y, position.z);
@@ -147,26 +147,40 @@ function raycast(event) {
 
 function loadPawns(material, row) {
   for (let column = 0; column < 8; column++) {
-    loadObject(
+    loadPiece(
       "lowpolychess/pawn/scene.gltf",
-      new THREE.Vector3(column, 0.2, row),
+      new THREE.Vector3(column, 0, row),
       material
     );
   }
 }
 
 function loadPairs(piece, offset) {
-  loadObject(piece, new THREE.Vector3(0 + offset, 0.2, 0), greyMaterial);
+  loadPiece(piece, new THREE.Vector3(0 + offset, 0, 0), greyMaterial);
 
-  loadObject(piece, new THREE.Vector3(7 - offset, 0.2, 0), greyMaterial);
+  loadPiece(piece, new THREE.Vector3(7 - offset, 0, 0), greyMaterial);
 
-  loadObject(piece, new THREE.Vector3(0 + offset, 0.2, 7), whiteMaterial);
+  loadPiece(piece, new THREE.Vector3(0 + offset, 0, 7), whiteMaterial);
 
-  loadObject(piece, new THREE.Vector3(7 - offset, 0.2, 7), whiteMaterial);
+  loadPiece(piece, new THREE.Vector3(7 - offset, 0, 7), whiteMaterial);
+}
+
+function loadTimer() {
+  var loader = new GLTFLoader();
+  loader.load("chess_timer/scene.gltf", function (gltf) {
+    gltf.scene.position.set(-2, 0, 3.5)
+    gltf.scene.rotation.y = -Math.PI/2;
+    gltf.scene.traverse((o) => {
+      if (o.isMesh) o.material = brownMaterial;
+    });
+    scene.add(gltf.scene);
+    objects.push(gltf.scene);
+  });
 }
 
 function loadPieces() {
-  loadObject(
+  //Timer
+  loadTimer(
     "chess_timer/scene.gltf",
     new THREE.Vector3(0, 0, 1),
     brownMaterial
@@ -175,29 +189,32 @@ function loadPieces() {
   loadPawns(greyMaterial, 1);
   loadPawns(whiteMaterial, 6);
 
+  //rooks knights & bishops 
   loadPairs("lowpolychess/rook/scene.gltf", 0);
   loadPairs("lowpolychess/knight/scene.gltf", 1);
   loadPairs("lowpolychess/bishop/scene.gltf", 2);
   loadPairs("lowpolychess/rook/scene.gltf", 0);
 
-  loadObject(
+  //queens
+  loadPiece(
     "lowpolychess/queen/scene.gltf",
     new THREE.Vector3(4, 0, 0),
     greyMaterial
   );
-  loadObject(
+  loadPiece(
     "lowpolychess/queen/scene.gltf",
     new THREE.Vector3(3, 0, 7),
     whiteMaterial
   );
   
-  loadObject(
+  //kings
+  loadPiece(
     "lowpolychess/king/scene.gltf",
     new THREE.Vector3(3, 0, 0),
     greyMaterial
   );
 
-  loadObject(
+  loadPiece(
     "lowpolychess/king/scene.gltf",
     new THREE.Vector3(4, 0, 7),
     whiteMaterial
