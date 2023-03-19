@@ -204,7 +204,6 @@ function loadTable() {
       if (ob.isObject3D) ob.castShadow = true;
     });
     scene.add(gltf.scene);
-    objects.push(gltf.scene);
   });
 }
 
