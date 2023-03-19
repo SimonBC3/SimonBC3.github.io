@@ -37,6 +37,18 @@ function light() {
   scene.add(light);
 }
 
+const floorMaterial = new THREE.MeshBasicMaterial( { color: 0xB5B2B2} );
+
+//create floor
+var floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(1000, 1000, 1000, 1000),
+  floorMaterial
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -0.2;
+floor.receiveShadow = true;
+scene.add(floor);
+
 //create chess board
 function createChessBoard() {
   var board, cubeGeo, lightMaterial, darkMaterial;
@@ -67,13 +79,13 @@ function createChessBoard() {
 //gltf loader
 function loadObject(object, position) {
   var loader = new GLTFLoader();
-  let darkMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+  let darkMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
   loader.load(object, function (gltf) {
     gltf.scene.position.set(position.x, position.y, position.z);
     gltf.scene.scale.set(0.8, 0.8, 0.8);
     gltf.scene.traverse((o) => {
-      if (o.isMesh) o.material = darkMaterial
-    })
+      if (o.isMesh) o.material = darkMaterial;
+    });
     scene.add(gltf.scene);
     objects.push(gltf.scene);
   });
@@ -90,8 +102,7 @@ function render() {
 }
 
 //create controls
-function createControls() {
-  orbitControls = new OrbitControls(camera, renderer.domElement);
+function createDragControls() {
   dragControls = new DragControls(dragObject, camera, renderer.domElement);
 }
 
@@ -112,7 +123,7 @@ function raycast(event) {
     if (intersects.length > 0) {
       INTERSECTED = intersects[0].object;
       dragObject.push(INTERSECTED);
-      createControls();
+      createDragControls();
     }
   });
 }
@@ -143,7 +154,8 @@ function init() {
       new THREE.Vector3(column, 0.2, 1)
     );
   }
-  createControls();
+  orbitControls = new OrbitControls(camera, renderer.domElement);
+  createDragControls();
 }
 
 init();
