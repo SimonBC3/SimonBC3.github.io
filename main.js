@@ -47,7 +47,7 @@ function light() {
   // scene.add(new THREE.CameraHelper(direccional.shadow.camera));
 
 
-  const focal = new THREE.SpotLight(0xffffff, 0.3);
+  const focal = new THREE.SpotLight(0xffffff, 0.4);
   focal.position.set(-15, 20, 0);
   focal.target.position.set(0, 0, 0);
   focal.angle = Math.PI / 7;
