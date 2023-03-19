@@ -104,6 +104,21 @@ function render() {
 //create controls
 function createDragControls() {
   dragControls = new DragControls(dragObject, camera, renderer.domElement);
+
+  //hold shift to move object
+window.addEventListener("keydown", function (event) {
+  console.log(event.key);
+  if (event.key == "Shift") {
+    orbitControls.enabled = false;
+  }
+});
+
+window.addEventListener("keyup", function (event) {
+  if (event.key == "Shift") {
+    orbitControls.enabled = true;
+  }
+});
+
 }
 
 window.addEventListener("mousedown", raycast, false);
@@ -128,26 +143,11 @@ function raycast(event) {
   });
 }
 
-//hold shift to move object
-window.addEventListener("keydown", function (event) {
-  console.log(event.key);
-  if (event.key == "Shift") {
-    orbitControls.enabled = false;
-  }
-});
-
-window.addEventListener("keyup", function (event) {
-  if (event.key == "Shift") {
-    orbitControls.enabled = true;
-  }
-});
-
 function init() {
   var boardObjects;
   light();
   boardObjects = createChessBoard();
   loadObject("chess_timer/scene.gltf", new THREE.Vector3(0, 0, 1));
-  loadObject("lowpolychess/pawn/scene.gltf", new THREE.Vector3(1, 0.2, 1));
   for (let column = 0; column < 8; column++) {
     loadObject(
       "lowpolychess/pawn/scene.gltf",
