@@ -9,6 +9,10 @@ var dragObject = [];
 var raycaster = new THREE.Raycaster();
 var INTERSECTED, intersects;
 
+const greyMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
+const whiteMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+const brownMaterial = new THREE.MeshPhongMaterial({ color: 0xa52a2a });
+
 //Scene
 var scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8e8e8e);
@@ -37,7 +41,7 @@ function light() {
   scene.add(light);
 }
 
-const floorMaterial = new THREE.MeshBasicMaterial( { color: 0xB5B2B2} );
+const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b2b2 });
 
 //create floor
 var floor = new THREE.Mesh(
@@ -77,14 +81,13 @@ function createChessBoard() {
 }
 
 //gltf loader
-function loadObject(object, position) {
+function loadObject(object, position, material) {
   var loader = new GLTFLoader();
-  let darkMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
   loader.load(object, function (gltf) {
     gltf.scene.position.set(position.x, position.y, position.z);
     gltf.scene.scale.set(0.8, 0.8, 0.8);
     gltf.scene.traverse((o) => {
-      if (o.isMesh) o.material = darkMaterial;
+      if (o.isMesh) o.material = material;
     });
     scene.add(gltf.scene);
     objects.push(gltf.scene);
@@ -106,19 +109,18 @@ function createDragControls() {
   dragControls = new DragControls(dragObject, camera, renderer.domElement);
 
   //hold shift to move object
-window.addEventListener("keydown", function (event) {
-  console.log(event.key);
-  if (event.key == "Shift") {
-    orbitControls.enabled = false;
-  }
-});
+  window.addEventListener("keydown", function (event) {
+    console.log(event.key);
+    if (event.key == "Shift") {
+      orbitControls.enabled = false;
+    }
+  });
 
-window.addEventListener("keyup", function (event) {
-  if (event.key == "Shift") {
-    orbitControls.enabled = true;
-  }
-});
-
+  window.addEventListener("keyup", function (event) {
+    if (event.key == "Shift") {
+      orbitControls.enabled = true;
+    }
+  });
 }
 
 window.addEventListener("mousedown", raycast, false);
@@ -143,18 +145,71 @@ function raycast(event) {
   });
 }
 
+function loadPawns(material, row) {
+  for (let column = 0; column < 8; column++) {
+    loadObject(
+      "lowpolychess/pawn/scene.gltf",
+      new THREE.Vector3(column, 0.2, row),
+      material
+    );
+  }
+}
+
+function loadPairs(piece, offset) {
+  loadObject(piece, new THREE.Vector3(0 + offset, 0.2, 0), greyMaterial);
+
+  loadObject(piece, new THREE.Vector3(7 - offset, 0.2, 0), greyMaterial);
+
+  loadObject(piece, new THREE.Vector3(0 + offset, 0.2, 7), whiteMaterial);
+
+  loadObject(piece, new THREE.Vector3(7 - offset, 0.2, 7), whiteMaterial);
+}
+
+function loadPieces() {
+  loadObject(
+    "chess_timer/scene.gltf",
+    new THREE.Vector3(0, 0, 1),
+    brownMaterial
+  );
+
+  loadPawns(greyMaterial, 1);
+  loadPawns(whiteMaterial, 6);
+
+  loadPairs("lowpolychess/rook/scene.gltf", 0);
+  loadPairs("lowpolychess/knight/scene.gltf", 1);
+  loadPairs("lowpolychess/bishop/scene.gltf", 2);
+  loadPairs("lowpolychess/rook/scene.gltf", 0);
+
+  loadObject(
+    "lowpolychess/queen/scene.gltf",
+    new THREE.Vector3(4, 0, 0),
+    greyMaterial
+  );
+  loadObject(
+    "lowpolychess/queen/scene.gltf",
+    new THREE.Vector3(3, 0, 7),
+    whiteMaterial
+  );
+  
+  loadObject(
+    "lowpolychess/king/scene.gltf",
+    new THREE.Vector3(3, 0, 0),
+    greyMaterial
+  );
+
+  loadObject(
+    "lowpolychess/king/scene.gltf",
+    new THREE.Vector3(4, 0, 7),
+    whiteMaterial
+  );
+}
+
 function init() {
   var boardObjects;
   light();
   boardObjects = createChessBoard();
-  loadObject("chess_timer/scene.gltf", new THREE.Vector3(0, 0, 1));
-  for (let column = 0; column < 8; column++) {
-    loadObject(
-      "lowpolychess/pawn/scene.gltf",
-      new THREE.Vector3(column, 0.2, 1)
-    );
-  }
   orbitControls = new OrbitControls(camera, renderer.domElement);
+  loadPieces();
   createDragControls();
 }
 
