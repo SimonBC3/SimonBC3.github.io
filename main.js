@@ -4,72 +4,83 @@ import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/
 import { DragControls } from "https://cdn.jsdelivr.net/npm/three@0.115/examples/jsm/controls/DragControls.js";
 
 var dragControls, orbitControls;
+var scene, renderer, camera;
 var objects = [];
 var dragObject = [];
+var boardObjects = [];
 var raycaster = new THREE.Raycaster();
 var INTERSECTED, intersects;
+var tableHeight = 8.2;
 
+//Materials
 const greyMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
 const whiteMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
 const brownMaterial = new THREE.MeshPhongMaterial({ color: 0xa52a2a });
-
-//Scene
-var scene = new THREE.Scene();
-scene.background = new THREE.Color(0x8e8e8e);
-
-//Renderer
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-document.body.appendChild(renderer.domElement);
+const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b2b2 });
 
 //Camera
 // Instanciar la camara
-var camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  1,
-  100
-);
-camera.position.z = -5;
-camera.position.y = 25;
-camera.position.x = -15;
+function createCamera() {
+  camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    1,
+    100
+  );
+  camera.position.z = -5;
+  camera.position.y = 25;
+  camera.position.x = -15;
+}
+
+function createScene() {
+  //Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x8e8e8e);
+}
+
+function createRenderer() {
+  //Renderer
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.shadowMap.enabled = true;
+  document.body.appendChild(renderer.domElement);
+}
 
 //Light
-function light() {
+function createLight() {
   const ambiental = new THREE.AmbientLight(0x222222);
   scene.add(ambiental);
 
-  const direccional = new THREE.DirectionalLight(0xffffff, 0.5);
+  const direccional = new THREE.DirectionalLight(0xffffff, 0.4);
   direccional.position.set(0, 30, 0);
   direccional.castShadow = true;
   scene.add(direccional);
   // scene.add(new THREE.CameraHelper(direccional.shadow.camera));
 
-
   const focal = new THREE.SpotLight(0xffffff, 0.4);
-  focal.position.set(-15, 20, 0);
-  focal.target.position.set(0, 0, 0);
+  focal.position.set(-12, 15, 2);
+  focal.target.position.set(5, 10, 3);
   focal.angle = Math.PI / 7;
   focal.penumbra = 0.3;
   focal.castShadow = true;
   focal.shadow.camera.far = 20;
   focal.shadow.camera.fov = 80;
   scene.add(focal);
+  scene.add(focal.target);
   // scene.add(new THREE.CameraHelper(focal.shadow.camera));
 }
 
-const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b2b2 });
-
 //create floor
-var floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(1000, 1000, 1000, 1000),
-  floorMaterial
-);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -0.2;
-floor.receiveShadow = true;
-scene.add(floor);
+function createFloor() {
+  var floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(1000, 1000, 1000, 1000),
+    floorMaterial
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -0.2;
+  floor.castShadow = floor.receiveShadow = true;
+  scene.add(floor);
+}
 
 //create chess board
 function createChessBoard() {
@@ -90,6 +101,7 @@ function createChessBoard() {
         cube = new THREE.Mesh(cubeGeo, x % 2 ? darkMaterial : lightMaterial);
       }
       cube.position.set(x, 8, z);
+      cube.castShadow = cube.receiveShadow = true;
       boardObjects.push(cube);
       board.add(cube);
     }
@@ -104,7 +116,12 @@ function loadPiece(object, position, material) {
     gltf.scene.position.set(position.x, position.y, position.z);
     gltf.scene.scale.set(0.8, 0.8, 0.8);
     gltf.scene.traverse((o) => {
-      if (o.isMesh) o.material = material;
+      if (o.isMesh) {
+        o.material = material;
+      }
+      if (o.isObject3D) {
+        o.castShadow = o.receiveShadow = true;
+      }
     });
     scene.add(gltf.scene);
     objects.push(gltf.scene);
@@ -117,7 +134,7 @@ var animate = function () {
   requestAnimationFrame(animate);
 };
 
-//create controls
+//create drag controls
 function createDragControls() {
   dragControls = new DragControls(dragObject, camera, renderer.domElement);
 
@@ -162,29 +179,38 @@ function loadPawns(material, row) {
   for (let column = 0; column < 8; column++) {
     loadPiece(
       "lowpolychess/pawn/scene.gltf",
-      new THREE.Vector3(column, 8.2, row),
+      new THREE.Vector3(column, tableHeight, row),
       material
     );
   }
 }
 
 function loadPairs(piece, offset) {
-  loadPiece(piece, new THREE.Vector3(0 + offset, 8.2, 0), greyMaterial);
+  loadPiece(piece, new THREE.Vector3(0 + offset, tableHeight, 0), greyMaterial);
 
-  loadPiece(piece, new THREE.Vector3(7 - offset, 8.2, 0), greyMaterial);
+  loadPiece(piece, new THREE.Vector3(7 - offset, tableHeight, 0), greyMaterial);
 
-  loadPiece(piece, new THREE.Vector3(0 + offset, 8.2, 7), whiteMaterial);
+  loadPiece(
+    piece,
+    new THREE.Vector3(0 + offset, tableHeight, 7),
+    whiteMaterial
+  );
 
-  loadPiece(piece, new THREE.Vector3(7 - offset, 8.2, 7), whiteMaterial);
+  loadPiece(
+    piece,
+    new THREE.Vector3(7 - offset, tableHeight, 7),
+    whiteMaterial
+  );
 }
 
 function loadTimer() {
   var loader = new GLTFLoader();
   loader.load("chess_timer/scene.gltf", function (gltf) {
-    gltf.scene.position.set(-2, 8.2, 3.5);
+    gltf.scene.position.set(-2, tableHeight, 3.5);
     gltf.scene.rotation.y = -Math.PI / 2;
     gltf.scene.traverse((o) => {
       if (o.isMesh) o.material = brownMaterial;
+      if (o.isObject3D) o.castShadow = o.receiveShadow = true;
     });
     scene.add(gltf.scene);
     objects.push(gltf.scene);
@@ -196,8 +222,8 @@ function loadTable() {
   loader.load("wood_table/scene.gltf", function (gltf) {
     gltf.scene.position.set(5, 5.5, 3.5);
     gltf.scene.scale.set(10, 10, 10);
-    gltf.scene.traverse((ob) => {
-      if (ob.isObject3D) ob.castShadow = true;
+    gltf.scene.traverse((o) => {
+      if (o.isObject3D) o.castShadow = o.receiveShadow = true;
     });
     scene.add(gltf.scene);
   });
@@ -211,51 +237,56 @@ function loadPieces() {
   loadPairs("lowpolychess/rook/scene.gltf", 0);
   loadPairs("lowpolychess/knight/scene.gltf", 1);
   loadPairs("lowpolychess/bishop/scene.gltf", 2);
-  loadPairs("lowpolychess/rook/scene.gltf", 0);
 
   //queens
   loadPiece(
     "lowpolychess/queen/scene.gltf",
-    new THREE.Vector3(4, 8.2, 0),
+    new THREE.Vector3(4, tableHeight, 0),
     greyMaterial
   );
   loadPiece(
     "lowpolychess/queen/scene.gltf",
-    new THREE.Vector3(3, 8.2, 7),
+    new THREE.Vector3(3, tableHeight, 7),
     whiteMaterial
   );
 
   //kings
   loadPiece(
     "lowpolychess/king/scene.gltf",
-    new THREE.Vector3(3, 8.2, 0),
+    new THREE.Vector3(3, tableHeight, 0),
     greyMaterial
   );
 
   loadPiece(
     "lowpolychess/king/scene.gltf",
-    new THREE.Vector3(4, 8.2, 7),
+    new THREE.Vector3(4, tableHeight, 7),
     whiteMaterial
   );
 }
 
 function loadWorld() {
-  //Timer
   loadTimer();
-
-  //Table
   loadTable();
+  createFloor();
+  
+  loadPieces();
+  boardObjects = createChessBoard();
 }
 
 function init() {
-  var boardObjects;
-  light();
-  boardObjects = createChessBoard();
+  //basicScene
+  createScene();
+  createRenderer();
+  createLight();
+  createCamera();
+
+  //controls
   orbitControls = new OrbitControls(camera, renderer.domElement);
-  loadPieces();
-  loadWorld();
   createDragControls();
+
+  loadWorld();
+
+  animate();
 }
 
 init();
-animate();
