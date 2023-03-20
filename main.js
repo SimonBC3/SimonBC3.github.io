@@ -113,13 +113,9 @@ function loadPiece(object, position, material) {
 
 //Animation
 var animate = function () {
-  render();
+  renderer.render(scene, camera);
   requestAnimationFrame(animate);
 };
-
-function render() {
-  renderer.render(scene, camera);
-}
 
 //create controls
 function createDragControls() {
