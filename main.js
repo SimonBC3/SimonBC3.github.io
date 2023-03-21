@@ -4,24 +4,19 @@ import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/
 import { DragControls } from "https://cdn.jsdelivr.net/npm/three@0.115/examples/jsm/controls/DragControls.js";
 
 
-var dragControls, orbitControls;
-var scene, renderer, camera;
+var scene, renderer, camera, INTERSECTED, intersects, gui, dragControls, orbitControls;
 var objects = [];
 var dragObject = [];
 var boardObjects = [];
 var raycaster = new THREE.Raycaster();
-var INTERSECTED, intersects;
 var tableHeight = 8.2;
-var gui, board;
 
 //Materials
 const greyMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
 const whiteMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
-const brownMaterial = new THREE.MeshPhongMaterial({ color: 0xa52a2a });
 const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b2b2 });
 
 //Camera
-// Instanciar la camara
 function createCamera() {
   camera = new THREE.PerspectiveCamera(
     90,
@@ -29,9 +24,10 @@ function createCamera() {
     1,
     100
   );
-  camera.position.z = -5;
-  camera.position.y =50;
+  camera.position.z = 1;
+  camera.position.y = 20;
   camera.position.x = -15;
+  camera.lookAt(-15,8.2,1)
 }
 
 function createScene() {
@@ -377,6 +373,7 @@ function init() {
 
   //controls
   orbitControls = new OrbitControls(camera, renderer.domElement);
+  orbitControls.target.set(3,8.2,3)
   createDragControls();
   createGUI();
 
