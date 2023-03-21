@@ -11,6 +11,7 @@ var boardObjects = [];
 var raycaster = new THREE.Raycaster();
 var INTERSECTED, intersects;
 var tableHeight = 8.2;
+var gui, timer;
 
 //Materials
 const greyMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
@@ -22,13 +23,13 @@ const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b2b2 });
 // Instanciar la camara
 function createCamera() {
   camera = new THREE.PerspectiveCamera(
-    75,
+    90,
     window.innerWidth / window.innerHeight,
     1,
     100
   );
   camera.position.z = -5;
-  camera.position.y = 25;
+  camera.position.y =50;
   camera.position.x = -15;
 }
 
@@ -58,7 +59,7 @@ function createLight() {
   // scene.add(new THREE.CameraHelper(direccional.shadow.camera));
 
   const focal = new THREE.SpotLight(0xffffff, 0.4);
-  focal.position.set(-12, 15, 2);
+  focal.position.set(-12, 15, 2);40,40,40,40
   focal.target.position.set(5, 10, 3);
   focal.angle = Math.PI / 7;
   focal.penumbra = 0.3;
@@ -71,15 +72,45 @@ function createLight() {
 }
 
 //create floor
-function createFloor() {
+function createRoom() {
+  var wallImage = new THREE.MeshBasicMaterial({
+    side: THREE.BackSide,
+    map: new THREE.TextureLoader().load(
+      "./pedroPascal.avif"
+    ),
+  });
+
   var floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(1000, 1000, 1000, 1000),
-    floorMaterial
+    new THREE.PlaneGeometry(100,100,100,100),
+    wallImage
   );
-  floor.rotation.x = -Math.PI / 2;
+  floor.rotation.x = Math.PI / 2;
   floor.position.y = -0.2;
   floor.castShadow = floor.receiveShadow = true;
   scene.add(floor);
+
+  var roof = new THREE.Mesh(
+    new THREE.PlaneGeometry(100,100,100,100),
+    wallImage
+  );
+  roof.rotation.x = -Math.PI / 2;
+  roof.position.y = 100;
+  roof.castShadow = floor.receiveShadow = true;
+  scene.add(roof);
+
+  const walls = [];
+  
+  walls.push(wallImage);
+  walls.push(wallImage);
+  walls.push(wallImage);
+  walls.push(wallImage);
+
+  const room = new THREE.Mesh( new THREE.BoxGeometry(100,100,100,100), walls)
+  room.rotation.y = Math.PI
+  room.rotation.x = Math.PI/2
+  room.rotation.z = Math.PI/2
+  room.position.y = 50
+  scene.add(room)
 }
 
 //create chess board
@@ -208,6 +239,7 @@ function loadTimer() {
   loader.load("chess_timer/scene.gltf", function (gltf) {
     gltf.scene.position.set(-2, tableHeight, 3.5);
     gltf.scene.rotation.y = -Math.PI / 2;
+    gltf.scene.name = "timer";
     gltf.scene.traverse((o) => {
       if (o.isMesh) o.material = brownMaterial;
       if (o.isObject3D) o.castShadow = o.receiveShadow = true;
@@ -267,10 +299,38 @@ function loadPieces() {
 function loadWorld() {
   loadTimer();
   loadTable();
-  createFloor();
-  
+  createRoom();
+
   loadPieces();
   boardObjects = createChessBoard();
+}
+
+function createGUI() {
+  gui = new dat.GUI();
+
+  var controls = {
+    restart: function () {
+      objects.forEach((element) => {
+        console.log(element);
+        scene.remove(element);
+      });
+      loadPieces();
+      loadTimer();
+    },
+    addClock: true,
+  };
+
+  gui.add(controls, "restart");
+  gui.add(controls, "addClock").onChange(function change() {
+    if (controls.addClock) {
+      loadTimer();
+    } else {
+      scene.remove(objects.find((e) => e == scene.getObjectByName("timer")));
+    }
+  });
+
+  var wallpaperOptions = gui.addFolder('Wallpaper Options')
+  
 }
 
 function init() {
@@ -283,6 +343,7 @@ function init() {
   //controls
   orbitControls = new OrbitControls(camera, renderer.domElement);
   createDragControls();
+  createGUI();
 
   loadWorld();
 
