@@ -11,7 +11,7 @@ var boardObjects = [];
 var raycaster = new THREE.Raycaster();
 var INTERSECTED, intersects;
 var tableHeight = 8.2;
-var gui, board, mouse;
+var gui, board;
 
 //Materials
 const greyMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
@@ -210,7 +210,6 @@ function createDragControls() {
 }
 
 window.addEventListener("mousedown", raycast, false);
-window.addEventListener("mousemove", onMouseMove, false);
 
 function raycast(event) {
   dragObject = [];
@@ -240,19 +239,6 @@ function loadPawns(material, row) {
       material
     );
   }
-}
-
-function onMouseMove(event) {
-  mouse.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
-  raycaster.setFromCamera(mouse, camera);
-  intersects = raycaster.intersectObjects([building]);
-
-  if (intersects.length == 0 || !dragging) return;
-
-  normalMatrix.getNormalMatrix(intersects[0].object.matrixWorld);
-  worldNormal.copy(intersects[0].face.normal).applyMatrix3(normalMatrix).normalize();
-  _window.position.copy(intersects[0].point.setY(-0.5)); // -0.5 = bottom of the wall - half height of the window
-  _window.lookAt(lookAtVector.copy(intersects[0].point).add(worldNormal));
 }
 
 function loadPairs(piece, offset) {
@@ -342,7 +328,7 @@ function loadWorld() {
   createRoom();
 
   loadPieces();
-  boardObjects = createChessBoard();
+  createChessBoard();
 }
 
 function createGUI() {
