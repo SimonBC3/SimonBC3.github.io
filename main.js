@@ -125,32 +125,6 @@ function mapTexture(texturePath) {
 
 //create chess board
 function createChessBoard() {
-  // var board, cubeGeo, lightMaterial, darkMaterial;
-  // var boardObjects = [];
-
-  // board = new THREE.Group();
-  // cubeGeo = new THREE.BoxGeometry(1, 0.5, 1);
-  // lightMaterial = new THREE.MeshPhongMaterial({ color: 0xc5c5c5 });
-  // darkMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
-
-  // for (let x = 0; x < 8; x++) {
-  //   for (let z = 0; z < 8; z++) {
-  //     if (!(z % 2)) {
-  //       var cube;
-  //       cube = new THREE.Mesh(cubeGeo, x % 2 ? lightMaterial : darkMaterial);
-  //     } else {
-  //       cube = new THREE.Mesh(cubeGeo, x % 2 ? darkMaterial : lightMaterial);
-  //     }
-  //     cube.position.set(x, 8, z);
-  //     cube.castShadow = cube.receiveShadow = true;
-  //     boardObjects.push(cube);
-  //     board.add(cube);
-  //   }
-  // }
-  // scene.add(board);
-  // return boardObjects;
-
-
   var loader = new GLTFLoader();
   loader.load("chess-board/Unity2Skfb.gltf", function (gltf) {
     gltf.scene.position.set(3.5,7.5,3.5);
@@ -273,6 +247,10 @@ function loadTimer() {
     scene.add(gltf.scene);
     objects.push(gltf.scene);
   });
+}
+
+function loadKnights() {
+
 }
 
 function loadTable() {
