@@ -3,8 +3,17 @@ import { OrbitControls } from "https://unpkg.com/three@0.126.1/examples/jsm/cont
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from "https://cdn.jsdelivr.net/npm/three@0.115/examples/jsm/controls/DragControls.js";
 
-
-var scene, renderer, camera, INTERSECTED, intersects, gui, dragControls, orbitControls;
+var scene,
+  renderer,
+  camera,
+  INTERSECTED,
+  intersects,
+  gui,
+  dragControls,
+  orbitControls,
+  room,
+  floor,
+  roof;
 var objects = [];
 var dragObject = [];
 var boardObjects = [];
@@ -14,7 +23,10 @@ var tableHeight = 8.2;
 //Materials
 const greyMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
 const whiteMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
-const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b2b2 });
+const floorMaterial = new THREE.MeshBasicMaterial({
+  side: THREE.BackSide,
+  color: 0x1367a3,
+});
 
 //Camera
 function createCamera() {
@@ -27,7 +39,7 @@ function createCamera() {
   camera.position.z = 1;
   camera.position.y = 20;
   camera.position.x = -15;
-  camera.lookAt(-15,8.2,1)
+  camera.lookAt(-15, 8.2, 1);
 }
 
 function createScene() {
@@ -56,7 +68,8 @@ function createLight() {
   // scene.add(new THREE.CameraHelper(direccional.shadow.camera));
 
   const focal = new THREE.SpotLight(0xffffff, 0.4);
-  focal.position.set(-12, 15, 2);40,40,40,40
+  focal.position.set(-12, 15, 2);
+  40, 40, 40, 40;
   focal.target.position.set(5, 10, 3);
   focal.angle = Math.PI / 7;
   focal.penumbra = 0.3;
@@ -68,55 +81,50 @@ function createLight() {
   // scene.add(new THREE.CameraHelper(focal.shadow.camera));
 }
 
-//create floor
-function createRoom() {
-  var wallImage = new THREE.MeshBasicMaterial({
+//create room
+function createRoom(material) {
+
+  //0x949494
+  var floorMaterial = new THREE.MeshBasicMaterial({
     side: THREE.BackSide,
-    map: new THREE.TextureLoader().load(
-      "./pedroPascal.avif"
-    ),
+    map: new THREE.TextureLoader().load("./wallpapers/stone.jpeg"),
   });
 
-  var floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(100,100,100,100),
-    wallImage
+  floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(100, 100, 100, 100),
+    floorMaterial
   );
   floor.rotation.x = Math.PI / 2;
-  floor.position.y = -0.2;
+  floor.position.y = -0.5;
   floor.castShadow = floor.receiveShadow = true;
   scene.add(floor);
 
-  var roof = new THREE.Mesh(
-    new THREE.PlaneGeometry(100,100,100,100),
-    wallImage
-  );
+  roof = new THREE.Mesh(new THREE.PlaneGeometry(100, 100, 100, 100), material);
   roof.rotation.x = -Math.PI / 2;
-  roof.position.y = 100;
+  roof.position.y = 99.5;
   roof.castShadow = floor.receiveShadow = true;
   scene.add(roof);
 
   const walls = [];
-  
-  walls.push(wallImage);
-  walls.push(wallImage);
-  walls.push(wallImage);
-  walls.push(wallImage);
 
-  const room = new THREE.Mesh( new THREE.BoxGeometry(100,100,100,100), walls)
-  room.rotation.y = Math.PI
-  room.rotation.x = Math.PI/2
-  room.rotation.z = Math.PI/2
-  room.position.y = 50
-  scene.add(room)
+  walls.push(material);
+  walls.push(material);
+  walls.push(material);
+  walls.push(material);
+
+  room = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100, 100), walls);
+  room.rotation.y = Math.PI;
+  room.rotation.x = Math.PI / 2;
+  room.rotation.z = Math.PI / 2;
+  room.position.y = 49.5;
+  scene.add(room);
 }
 
 function mapTexture(texturePath) {
-  var texture = new THREE.TextureLoader().load(
-    texturePath
-  );
+  var texture = new THREE.TextureLoader().load(texturePath);
   const material = new THREE.MeshStandardMaterial({
-    map: texture
-  })
+    map: texture,
+  });
   return material;
 }
 
@@ -124,17 +132,17 @@ function mapTexture(texturePath) {
 function createChessBoard() {
   var loader = new GLTFLoader();
   loader.load("chess-board/Unity2Skfb.gltf", function (gltf) {
-    gltf.scene.position.set(3.5,7.5,3.5);
-    gltf.scene.scale.set(0.4, 0.5, 0.4)
-    const material = mapTexture("chess-board/textures/chess_board.jpg")
+    gltf.scene.position.set(3.5, 7.5, 3.5);
+    gltf.scene.scale.set(0.4, 0.5, 0.4);
+    const material = mapTexture("chess-board/textures/chess_board.jpg");
     gltf.scene.traverse((o) => {
       if (o.isObject3D) {
         o.castShadow = o.receiveShadow = true;
-        o.material = material
+        o.material = material;
       }
     });
     scene.add(gltf.scene);
-    board = gltf.scene;
+    gltf.scene;
   });
 }
 
@@ -168,7 +176,7 @@ function loadRotatedPiece(object, position, material) {
         o.castShadow = o.receiveShadow = true;
       }
     });
-    gltf.scene.rotation.y = Math.PI
+    gltf.scene.rotation.y = Math.PI;
     scene.add(gltf.scene);
     objects.push(gltf.scene);
   });
@@ -272,10 +280,16 @@ function loadKnights() {
   loadPiece(knightPath, new THREE.Vector3(6, tableHeight, 0), greyMaterial);
 
   //whites
-  loadRotatedPiece(knightPath, new THREE.Vector3(1, tableHeight, 7), whiteMaterial);
-  loadRotatedPiece(knightPath, new THREE.Vector3(6, tableHeight, 7), whiteMaterial);
-
-
+  loadRotatedPiece(
+    knightPath,
+    new THREE.Vector3(1, tableHeight, 7),
+    whiteMaterial
+  );
+  loadRotatedPiece(
+    knightPath,
+    new THREE.Vector3(6, tableHeight, 7),
+    whiteMaterial
+  );
 }
 
 function loadTable() {
@@ -298,8 +312,6 @@ function loadPieces() {
   loadPairs("lowpolychess/rook/scene.gltf", 0);
   loadKnights();
   loadPairs("lowpolychess/bishop/scene.gltf", 2);
-
-
 
   //queens
   loadPiece(
@@ -330,7 +342,12 @@ function loadPieces() {
 function loadWorld() {
   loadTimer();
   loadTable();
-  createRoom();
+
+  var wallImage = new THREE.MeshBasicMaterial({
+    side: THREE.BackSide,
+    map: new THREE.TextureLoader().load("./wallpapers/mountain.jpg"),
+  });
+  createRoom(wallImage);
 
   loadPieces();
   createChessBoard();
@@ -338,17 +355,46 @@ function loadWorld() {
 
 function createGUI() {
   gui = new dat.GUI();
+  let color = new THREE.MeshBasicMaterial({ color: 0x808080 }).color;
 
   var controls = {
     restart: function () {
       objects.forEach((element) => {
-        console.log(element);
         scene.remove(element);
       });
       loadPieces();
       loadTimer();
     },
     addClock: true,
+    wallPaperColor: color.getHex(),
+    pedroPascalWallpaper: function () {
+      var wallImage = new THREE.MeshBasicMaterial({
+        side: THREE.BackSide,
+        map: new THREE.TextureLoader().load("./wallpapers/pedroPascal.avif"),
+      });
+      changeWallPaper(wallImage);
+    },
+    thunderWallpaper: function () {
+      var wallImage = new THREE.MeshBasicMaterial({
+        side: THREE.BackSide,
+        map: new THREE.TextureLoader().load("./wallpapers/thunder.jpeg"),
+      });
+      changeWallPaper(wallImage);
+    },
+    stormTrooperWallpaper: function () {
+      var wallImage = new THREE.MeshBasicMaterial({
+        side: THREE.BackSide,
+        map: new THREE.TextureLoader().load("./wallpapers/stormtrooper.jpeg"),
+      });
+      changeWallPaper(wallImage);
+    },
+    coloursWallpaper: function () {
+      var wallImage = new THREE.MeshBasicMaterial({
+        side: THREE.BackSide,
+        map: new THREE.TextureLoader().load("./wallpapers/mountain.jpg"),
+      });
+      changeWallPaper(wallImage);
+    }
   };
 
   gui.add(controls, "restart");
@@ -360,8 +406,28 @@ function createGUI() {
     }
   });
 
-  var wallpaperOptions = gui.addFolder('Wallpaper Options')
-  
+  var wallpaperOptions = gui.addFolder("Wallpaper Options");
+  wallpaperOptions.addColor(controls, "wallPaperColor").onChange((value) => {
+    let material = new THREE.MeshBasicMaterial({
+      side: THREE.BackSide,
+      color: value,
+    });
+    changeWallPaper(material);
+  });
+  var customWallPapers = wallpaperOptions.addFolder("Custom Wallpapers");
+  customWallPapers.add(controls, "pedroPascalWallpaper");
+  customWallPapers.add(controls, "thunderWallpaper");
+  customWallPapers.add(controls, "stormTrooperWallpaper");
+  customWallPapers.add(controls, "coloursWallpaper");
+
+}
+
+function changeWallPaper(material) {
+  scene.remove(room);
+  scene.remove(floor);
+  scene.remove(roof);
+
+  createRoom(material);
 }
 
 function init() {
@@ -373,7 +439,7 @@ function init() {
 
   //controls
   orbitControls = new OrbitControls(camera, renderer.domElement);
-  orbitControls.target.set(3,8.2,3)
+  orbitControls.target.set(3, 8.2, 3);
   createDragControls();
   createGUI();
 
