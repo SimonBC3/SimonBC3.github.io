@@ -11,7 +11,7 @@ var boardObjects = [];
 var raycaster = new THREE.Raycaster();
 var INTERSECTED, intersects;
 var tableHeight = 8.2;
-var gui, timer;
+var gui, board, mouse;
 
 //Materials
 const greyMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
@@ -113,39 +113,64 @@ function createRoom() {
   scene.add(room)
 }
 
+function mapTexture(texturePath) {
+  var texture = new THREE.TextureLoader().load(
+    texturePath
+  );
+  const material = new THREE.MeshStandardMaterial({
+    map: texture
+  })
+  return material;
+}
+
 //create chess board
 function createChessBoard() {
-  var board, cubeGeo, lightMaterial, darkMaterial;
-  var boardObjects = [];
+  // var board, cubeGeo, lightMaterial, darkMaterial;
+  // var boardObjects = [];
 
-  board = new THREE.Group();
-  cubeGeo = new THREE.BoxGeometry(1, 0.5, 1);
-  lightMaterial = new THREE.MeshPhongMaterial({ color: 0xc5c5c5 });
-  darkMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+  // board = new THREE.Group();
+  // cubeGeo = new THREE.BoxGeometry(1, 0.5, 1);
+  // lightMaterial = new THREE.MeshPhongMaterial({ color: 0xc5c5c5 });
+  // darkMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
 
-  for (let x = 0; x < 8; x++) {
-    for (let z = 0; z < 8; z++) {
-      if (!(z % 2)) {
-        var cube;
-        cube = new THREE.Mesh(cubeGeo, x % 2 ? lightMaterial : darkMaterial);
-      } else {
-        cube = new THREE.Mesh(cubeGeo, x % 2 ? darkMaterial : lightMaterial);
+  // for (let x = 0; x < 8; x++) {
+  //   for (let z = 0; z < 8; z++) {
+  //     if (!(z % 2)) {
+  //       var cube;
+  //       cube = new THREE.Mesh(cubeGeo, x % 2 ? lightMaterial : darkMaterial);
+  //     } else {
+  //       cube = new THREE.Mesh(cubeGeo, x % 2 ? darkMaterial : lightMaterial);
+  //     }
+  //     cube.position.set(x, 8, z);
+  //     cube.castShadow = cube.receiveShadow = true;
+  //     boardObjects.push(cube);
+  //     board.add(cube);
+  //   }
+  // }
+  // scene.add(board);
+  // return boardObjects;
+
+
+  var loader = new GLTFLoader();
+  loader.load("chess-board/Unity2Skfb.gltf", function (gltf) {
+    gltf.scene.position.set(3.5,7.5,3.5);
+    gltf.scene.scale.set(0.4, 0.5, 0.4)
+    const material = mapTexture("chess-board/textures/chess_board.jpg")
+    gltf.scene.traverse((o) => {
+      if (o.isObject3D) {
+        o.castShadow = o.receiveShadow = true;
+        o.material = material
       }
-      cube.position.set(x, 8, z);
-      cube.castShadow = cube.receiveShadow = true;
-      boardObjects.push(cube);
-      board.add(cube);
-    }
-  }
-  scene.add(board);
-  return boardObjects;
+    });
+    scene.add(gltf.scene);
+    board = gltf.scene;
+  });
 }
 
 function loadPiece(object, position, material) {
   var loader = new GLTFLoader();
   loader.load(object, function (gltf) {
     gltf.scene.position.set(position.x, position.y, position.z);
-    gltf.scene.scale.set(0.8, 0.8, 0.8);
     gltf.scene.traverse((o) => {
       if (o.isMesh) {
         o.material = material;
@@ -185,6 +210,7 @@ function createDragControls() {
 }
 
 window.addEventListener("mousedown", raycast, false);
+window.addEventListener("mousemove", onMouseMove, false);
 
 function raycast(event) {
   dragObject = [];
@@ -216,6 +242,19 @@ function loadPawns(material, row) {
   }
 }
 
+function onMouseMove(event) {
+  mouse.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
+  raycaster.setFromCamera(mouse, camera);
+  intersects = raycaster.intersectObjects([building]);
+
+  if (intersects.length == 0 || !dragging) return;
+
+  normalMatrix.getNormalMatrix(intersects[0].object.matrixWorld);
+  worldNormal.copy(intersects[0].face.normal).applyMatrix3(normalMatrix).normalize();
+  _window.position.copy(intersects[0].point.setY(-0.5)); // -0.5 = bottom of the wall - half height of the window
+  _window.lookAt(lookAtVector.copy(intersects[0].point).add(worldNormal));
+}
+
 function loadPairs(piece, offset) {
   loadPiece(piece, new THREE.Vector3(0 + offset, tableHeight, 0), greyMaterial);
 
@@ -240,8 +279,9 @@ function loadTimer() {
     gltf.scene.position.set(-2, tableHeight, 3.5);
     gltf.scene.rotation.y = -Math.PI / 2;
     gltf.scene.name = "timer";
+    const material = mapTexture("chess_timer/textures/lambert4SG_diffuse.png");
     gltf.scene.traverse((o) => {
-      if (o.isMesh) o.material = brownMaterial;
+      if (o.isMesh) o.material = material;
       if (o.isObject3D) o.castShadow = o.receiveShadow = true;
     });
     scene.add(gltf.scene);
