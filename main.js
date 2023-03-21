@@ -3,6 +3,7 @@ import { OrbitControls } from "https://unpkg.com/three@0.126.1/examples/jsm/cont
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from "https://cdn.jsdelivr.net/npm/three@0.115/examples/jsm/controls/DragControls.js";
 
+
 var dragControls, orbitControls;
 var scene, renderer, camera;
 var objects = [];
@@ -155,6 +156,25 @@ function loadPiece(object, position, material) {
     });
     scene.add(gltf.scene);
     objects.push(gltf.scene);
+    return gltf.scene;
+  });
+}
+
+function loadRotatedPiece(object, position, material) {
+  var loader = new GLTFLoader();
+  loader.load(object, function (gltf) {
+    gltf.scene.position.set(position.x, position.y, position.z);
+    gltf.scene.traverse((o) => {
+      if (o.isMesh) {
+        o.material = material;
+      }
+      if (o.isObject3D) {
+        o.castShadow = o.receiveShadow = true;
+      }
+    });
+    gltf.scene.rotation.y = Math.PI
+    scene.add(gltf.scene);
+    objects.push(gltf.scene);
   });
 }
 
@@ -250,6 +270,15 @@ function loadTimer() {
 }
 
 function loadKnights() {
+  let knightPath = "lowpolychess/knight/scene.gltf";
+  //blacks
+  loadPiece(knightPath, new THREE.Vector3(1, tableHeight, 0), greyMaterial);
+  loadPiece(knightPath, new THREE.Vector3(6, tableHeight, 0), greyMaterial);
+
+  //whites
+  loadRotatedPiece(knightPath, new THREE.Vector3(1, tableHeight, 7), whiteMaterial);
+  loadRotatedPiece(knightPath, new THREE.Vector3(6, tableHeight, 7), whiteMaterial);
+
 
 }
 
@@ -271,8 +300,10 @@ function loadPieces() {
 
   //rooks knights & bishops
   loadPairs("lowpolychess/rook/scene.gltf", 0);
-  loadPairs("lowpolychess/knight/scene.gltf", 1);
+  loadKnights();
   loadPairs("lowpolychess/bishop/scene.gltf", 2);
+
+
 
   //queens
   loadPiece(
